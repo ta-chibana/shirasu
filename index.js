@@ -18,8 +18,12 @@ const url = process.env.TARGET_URL;
     page.click('#login-btn')
   ]);
 
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click('li[title="ウェブメール"]>a')
+  ]);
+
   await setTimeout(async () => {
-    console.log('hello');
     await browser.close();
   }, 10000);
 })();
