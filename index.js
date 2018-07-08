@@ -19,9 +19,18 @@ const url = process.env.TARGET_URL;
   ]);
 
   await Promise.all([
-    page.waitForNavigation(),
+    page.waitForNavigation({ waitUntil: 'networkidle0' }),
     page.click('li[title="ウェブメール"]>a')
   ]);
+
+  const pages = await browser.pages();
+  const mailPage = pages[2];
+
+  await mailPage.waitForNavigation({ waitUntil: 'networkidle0' });
+  await mailPage.hover('#mail-slide_bar');
+  await mailPage.mouse.down();
+  await mailPage.mouse.move(500, 600);
+  await mailPage.mouse.up();
 
   await setTimeout(async () => {
     await browser.close();
