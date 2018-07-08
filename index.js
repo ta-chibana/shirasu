@@ -1,8 +1,6 @@
 require('dotenv').config();
 const puppeteer = require('puppeteer');
 
-const url = process.env.TARGET_URL;
-
 (async () => {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -12,15 +10,12 @@ const url = process.env.TARGET_URL;
 
   await page.type('[name="UserID"]', process.env.LOGIN_ID);
   await page.type('[name="_word"]', process.env.PASSWORD);
-
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click('#login-btn')
-  ]);
+  await page.click('#login-btn');
+  await page.waitForNavigation();
 
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    page.click('li[title="ウェブメール"]>a')
+    page.click('li[title="ウェブメール"] > a')
   ]);
 
   const pages = await browser.pages();
@@ -32,7 +27,22 @@ const url = process.env.TARGET_URL;
   await mailPage.mouse.move(500, 600);
   await mailPage.mouse.up();
 
-  await setTimeout(async () => {
-    await browser.close();
-  }, 10000);
+  const mails = await mailPage.$$eval('tr.mail-table-row-unread', rows => {
+    return Array.prototype.map.call(rows, mail => {
+      const sender = mail
+        .querySelector('.mail-table-cell-from > .com_table-box')
+        .innerText;
+      const subject = mail
+        .querySelector('.mail-table-cell-subject > .com_table-box')
+        .innerText;
+
+      return { sender, subject };
+    });
+  });
+
+  mails.forEach(mail => {
+    console.log(mail);
+  });
+
+  await browser.close();
 })();
