@@ -20,14 +20,33 @@ const puppeteer = require('puppeteer');
 
   const pages = await browser.pages();
   const mailPage = pages[2];
-
   await mailPage.waitForNavigation({ waitUntil: 'networkidle0' });
-  await mailPage.hover('#mail-slide_bar');
+
+  const unreadCountSelector = [
+    '.mail-folder-node-received',
+    '.tree-link',
+    '.mail-folder-unread-container',
+    '.mail-folder-unread'
+  ].join(' > ');
+  const unreadCount = await mailPage.$eval(unreadCountSelector, e => e.innerText);
+  if (parseInt(unreadCount) === 0) return;
+
+  await mailPage.click('.toolbar-item[data-action="search"]');
+  await mailPage.waitFor('[name="unseen"]');
+  await mailPage.click('[name="unseen"]');
+  await mailPage.click('.search-button-container > [data-action="exec_search"]');
+
+  const slideBarSelector = '#mail-slide_bar';
+  await mailPage.waitFor(slideBarSelector);
+  await mailPage.hover(slideBarSelector);
   await mailPage.mouse.down();
   await mailPage.mouse.move(500, 600);
   await mailPage.mouse.up();
 
-  const mails = await mailPage.$$eval('tr.mail-table-row-unread', rows => {
+  // TODO: unreadSelectorに対応するnodeがない場合の処理
+  const unreadSelector = 'tr.mail-table-row-unread';
+  await mailPage.waitFor(unreadSelector);
+  const mails = await mailPage.$$eval(unreadSelector, rows => {
     return Array.prototype.map.call(rows, mail => {
       const sender = mail
         .querySelector('.mail-table-cell-from > .com_table-box')
@@ -40,9 +59,9 @@ const puppeteer = require('puppeteer');
     });
   });
 
+  await browser.close();
+
   mails.forEach(mail => {
     console.log(mail);
   });
-
-  await browser.close();
 })();
