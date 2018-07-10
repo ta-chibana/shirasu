@@ -1,5 +1,31 @@
-require('dotenv').config();
+#! /usr/bin/env /usr/local/bin/node
 const puppeteer = require('puppeteer');
+const path = require('path');
+
+const scriptPath = process.argv[1].match(/^(\/[\w|\/]+)\//)[1];
+const configPath = path.join(
+  path.dirname(process.argv[1]), '.env'
+);
+const env = require('dotenv').config({ path: configPath });
+if (env.error) {
+  throw env.error;
+}
+
+const printMails = mails => {
+  console.log(`:mailbox_with_mail: ${mails.length} | color=#00ffff`);
+  console.log('---');
+
+  mails.forEach(mail => {
+    const { sender, subject } = mail;
+    console.log(`${sender.trim()}: ${subject.trim()}`);
+  })
+}
+
+const printEmpty = () => {
+  console.log(':mailbox_with_no_mail: 0');
+  console.log('---');
+  console.log('unread mail not exists.');
+}
 
 (async () => {
   const browser = await puppeteer.launch({ headless: false });
@@ -29,6 +55,8 @@ const puppeteer = require('puppeteer');
     '.mail-folder-unread'
   ].join(' > ');
   const unreadCount = await mailPage.$eval(unreadCountSelector, e => e.innerText);
+
+  // TODO: unreadCountが0の場合の処理
   if (parseInt(unreadCount) === 0) return;
 
   await mailPage.click('.toolbar-item[data-action="search"]');
@@ -61,7 +89,5 @@ const puppeteer = require('puppeteer');
 
   await browser.close();
 
-  mails.forEach(mail => {
-    console.log(mail);
-  });
+  printMails(mails);
 })();
