@@ -12,12 +12,17 @@ if (env.error) {
 }
 
 const printMails = mails => {
+  if (mails.length === 0) {
+    printEmpty();
+    return;
+  }
+
   console.log(`:mailbox_with_mail: ${mails.length} | color=#00ffff`);
   console.log('---');
 
   mails.forEach(mail => {
     const { sender, subject } = mail;
-    console.log(`${sender.trim()}: ${subject.trim()}`);
+    console.log(`[${sender.trim()}]: ${subject.trim()}`);
   })
 }
 
@@ -27,8 +32,7 @@ const printEmpty = () => {
   console.log('unread mail not exists.');
 }
 
-(async () => {
-  const browser = await puppeteer.launch({ headless: false });
+const fetchMails = async browser => {
   const page = await browser.newPage();
 
   const url = process.env.TARGET_URL;
@@ -56,8 +60,7 @@ const printEmpty = () => {
   ].join(' > ');
   const unreadCount = await mailPage.$eval(unreadCountSelector, e => e.innerText);
 
-  // TODO: unreadCountが0の場合の処理
-  if (parseInt(unreadCount) === 0) return;
+  if (parseInt(unreadCount) === 0) return [];
 
   await mailPage.click('.toolbar-item[data-action="search"]');
   await mailPage.waitFor('[name="unseen"]');
@@ -71,10 +74,9 @@ const printEmpty = () => {
   await mailPage.mouse.move(500, 600);
   await mailPage.mouse.up();
 
-  // TODO: unreadSelectorに対応するnodeがない場合の処理
   const unreadSelector = 'tr.mail-table-row-unread';
   await mailPage.waitFor(unreadSelector);
-  const mails = await mailPage.$$eval(unreadSelector, rows => {
+  return mailPage.$$eval(unreadSelector, rows => {
     return Array.prototype.map.call(rows, mail => {
       const sender = mail
         .querySelector('.mail-table-cell-from > .com_table-box')
@@ -86,8 +88,11 @@ const printEmpty = () => {
       return { sender, subject };
     });
   });
+}
 
+(async () => {
+  const browser = await puppeteer.launch({ headless: false });
+  const mails = await fetchMails(browser);
   await browser.close();
-
   printMails(mails);
 })();
