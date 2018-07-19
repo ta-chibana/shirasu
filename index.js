@@ -3,12 +3,19 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 
 const scriptPath = process.argv[1].match(/^(\/[\w|\/]+)\//)[1];
-const configPath = path.join(
-  path.dirname(process.argv[1]), '.env'
-);
+const configPath = path.join(path.dirname(process.argv[1]), '.env');
 const env = require('dotenv').config({ path: configPath });
 if (env.error) {
   throw env.error;
+}
+
+const truncate = (text, length) => {
+  const trimed = text.trim();
+  if (trimed.length < length) {
+    return trimed;
+  }
+
+  return `${trimed.substring(0, length)}...`;
 }
 
 const printMails = mails => {
@@ -21,9 +28,14 @@ const printMails = mails => {
   console.log('---');
 
   mails.forEach(mail => {
-    const { sender, subject } = mail;
-    console.log(`[${sender.trim()}]: ${subject.trim()}`);
-  })
+    const { sender, subject, date } = mail;
+    const row = [
+      `:calendar:${date} `,
+      `${truncate(sender, 10)} `,
+      `:arrow_forward:${truncate(subject, 30)}`
+    ].join('');
+    console.log(row);
+  });
 }
 
 const printEmpty = () => {
@@ -84,8 +96,11 @@ const fetchMails = async browser => {
       const subject = mail
         .querySelector('.mail-table-cell-subject > .com_table-box')
         .innerText;
+      const date = mail
+        .querySelector('.mail-table-cell-datetime > .com_table-box')
+        .innerText;
 
-      return { sender, subject };
+      return { sender, subject, date };
     });
   });
 }
