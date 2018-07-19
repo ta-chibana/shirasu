@@ -91,7 +91,7 @@ const fetchMails = async browser => {
 }
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch();
   const mails = await fetchMails(browser);
   await browser.close();
   printMails(mails);
