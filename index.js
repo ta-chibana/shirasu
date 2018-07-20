@@ -2,7 +2,6 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
 
-const scriptPath = process.argv[1].match(/^(\/[\w|\/]+)\//)[1];
 const configPath = path.join(path.dirname(process.argv[1]), '.env');
 const env = require('dotenv').config({ path: configPath });
 if (env.error) {
