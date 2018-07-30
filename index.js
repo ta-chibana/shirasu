@@ -43,6 +43,12 @@ const printEmpty = () => {
   console.log('unread mail not exists.');
 }
 
+const printError = error => {
+  console.log(':mailbox_with_no_mail:');
+  console.log('---');
+  console.error(error);
+}
+
 const fetchMails = async browser => {
   const page = await browser.newPage();
 
@@ -105,12 +111,15 @@ const fetchMails = async browser => {
 }
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch();
 
   try {
     const mails = await fetchMails(browser);
     printMails(mails);
+  } catch (e) {
+    printError(e);
   } finally {
+    console.log('refresh | color=red refresh=true');
     await browser.close();
   }
 })();
