@@ -82,6 +82,7 @@ const fetchMails = async browser => {
   await mailPage.click('.toolbar-item[data-action="search"]');
   await mailPage.waitFor('[name="unseen"]');
   await mailPage.click('[name="unseen"]');
+  await mailPage.click('[name="sfolder"]');
   await mailPage.click('.search-button-container > [data-action="exec_search"]');
 
   const slideBarSelector = '#mail-slide_bar';
