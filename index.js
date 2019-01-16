@@ -94,21 +94,26 @@ const fetchMails = async browser => {
 
   const unreadSelector = 'tr.mail-table-row-unread';
   await mailPage.waitFor(unreadSelector);
-  return mailPage.$$eval(unreadSelector, rows => {
+  const selectors = {
+    from: '.mail-table-cell-from > .com_table-box',
+    subject: '.mail-table-cell-subject > .com_table-box',
+    datetime: '.mail-table-cell-datetime > .com_table-box'
+  };
+  return mailPage.$$eval(unreadSelector, (rows, selectors) => {
     return Array.prototype.map.call(rows, mail => {
       const sender = mail
-        .querySelector('.mail-table-cell-from > .com_table-box')
+        .querySelector(selectors.from)
         .innerText;
       const subject = mail
-        .querySelector('.mail-table-cell-subject > .com_table-box')
+        .querySelector(selectors.subject)
         .innerText;
       const date = mail
-        .querySelector('.mail-table-cell-datetime > .com_table-box')
+        .querySelector(selectors.datetime)
         .innerText;
 
       return { sender, subject, date };
     });
-  });
+  }, selectors);
 }
 
 (async () => {
